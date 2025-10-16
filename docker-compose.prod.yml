@@ -1,4 +1,5 @@
 version: '3.9'
+
 services:
   frontend:
     build:
@@ -8,10 +9,9 @@ services:
       - "80:4000"
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_BACKEND_URL=http://localhost:3500/api
+      # ВАЖНО: без nginx фронтенд должен ходить прямо на порт бэкенда
+      - NEXT_PUBLIC_BACKEND_URL=http://YOUR_SERVER_IP:3500/api
     restart: unless-stopped
-    depends_on:
-      - backend
 
   backend:
     build:
