@@ -18,6 +18,12 @@ const nextConfig = {
       config.devtool = false
     }
 
+    // Исправляем CSS парсинг
+    config.module.rules.push({
+      test: /\.css$/,
+      use: ['style-loader', 'css-loader'],
+    })
+
     // Игнорируем source maps для внешних библиотек
     config.ignoreWarnings = [
       /Failed to parse source map/,
