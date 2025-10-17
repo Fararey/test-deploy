@@ -1,25 +1,44 @@
 version: '3.9'
 
 services:
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - frontend
+      - backend
+    restart: unless-stopped
+    volumes:
+      # Для production с реальным доменом раскомментируйте эти строки:
+      # - ./ssl:/etc/nginx/ssl:ro
+      - nginx_logs:/var/log/nginx
+
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    ports:
-      - "80:4000"
     environment:
       - NODE_ENV=production
-      # ВАЖНО: без nginx фронтенд должен ходить прямо на порт бэкенда
-      - NEXT_PUBLIC_BACKEND_URL=http://YOUR_SERVER_IP:3500/api
+      # Теперь фронтенд будет обращаться к API через nginx
+      - NEXT_PUBLIC_BACKEND_URL=/api
     restart: unless-stopped
+    expose:
+      - "4000"
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    ports:
-      - "3500:3500"
     environment:
       - NODE_ENV=production
       - PORT=3500
     restart: unless-stopped
+    expose:
+      - "3500"
+
+volumes:
+  nginx_logs:
