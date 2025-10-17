@@ -24,7 +24,7 @@ services:
     environment:
       - NODE_ENV=production
       # Теперь фронтенд будет обращаться к API через nginx
-      - NEXT_PUBLIC_BACKEND_URL=/api
+      - NEXT_PUBLIC_BACKEND_URL=https://justcreatedsite.ru/api
     restart: unless-stopped
     expose:
       - "4000"
