@@ -12,8 +12,8 @@ services:
       - 4000:4000
     environment:
       - NODE_ENV=development
-      - BACKEND_URL=http://backend:3500/api
-      - NEXT_PUBLIC_BACKEND_URL=http://backend:3500/api
+      - BACKEND_URL=http://localhost:3500/api
+      - NEXT_PUBLIC_BACKEND_URL=http://localhost:3500/api
 
 
   backend:
