@@ -14,7 +14,7 @@ services:
     restart: unless-stopped
     volumes:
       # Для production с реальным доменом раскомментируйте эти строки:
-      # - ./ssl:/etc/nginx/ssl:ro
+      - ./ssl:/etc/nginx/ssl:ro
       - nginx_logs:/var/log/nginx
 
   frontend:
