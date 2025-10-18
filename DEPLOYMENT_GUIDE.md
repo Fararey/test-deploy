@@ -164,8 +164,8 @@ volumes:
 
 2. **Перезапустите приложение:**
 ```bash
-docker-compose -f docker-compose.prod.yml down
-docker-compose -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.prod.yml down
+docker compose -f docker-compose.prod.yml up --build
 ```
 
 ### Шаг 5: Автоматическое обновление SSL

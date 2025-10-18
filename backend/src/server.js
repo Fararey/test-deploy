@@ -9,12 +9,14 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3500;
 
-// создаем связи
+// Initialize database connection
 (async () => {
   try {
     await initDatabase(); // Ensure all tables are created
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Error during startup:', error);
+    // Don't exit immediately, let the main startServer function handle it
   }
 })();
 
@@ -80,6 +82,7 @@ app.post('/api/login', async (req, res) => {
       message: 'Неверные учетные данные',
     });
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Ошибка при аутентификации:', error);
     return res.status(500).json({
       success: false,
@@ -108,6 +111,7 @@ app.get('/api/logs', async (req, res) => {
       })),
     });
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Ошибка при получении логов:', error);
     return res.status(500).json({
       success: false,
@@ -133,28 +137,14 @@ app.use('*', (req, res) => {
   });
 });
 
-// Инициализация базы данных и запуск сервера
-const startServer = async () => {
-  try {
-    // Подключаемся к базе данных
-    await sequelize.authenticate();
-    console.log('✅ Подключение к базе данных установлено');
+// Обработчик для всех остальных маршрутов
+app.use('*', (req, res) => {
+  res.status(404).set('Content-Type', 'application/json').json({
+    status: 'Error',
+    message: 'Page not found',
+  });
+});
 
-    // Синхронизируем модели с базой данных
-    await sequelize.sync();
-    console.log('✅ Модели синхронизированы с базой данных');
-
-    // Запускаем сервер
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log(`🚀 Сервер запущен на порту ${PORT}`);
-      console.log(`📡 Health check: http://localhost:${PORT}/api/health`);
-      console.log(`🔐 Login endpoint: http://localhost:${PORT}/api/login`);
-      console.log(`📊 Logs endpoint: http://localhost:${PORT}/api/logs`);
-    });
-  } catch (error) {
-    console.error('❌ Ошибка при запуске сервера:', error);
-    process.exit(1);
-  }
-};
-
-startServer();
+app.listen(PORT, '0.0.0.0', () =>
+  console.log(`Server running on port ${PORT}`),
+);

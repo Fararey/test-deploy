@@ -41,12 +41,11 @@ services:
       - NODE_ENV=production
       - PORT=3500
     restart: unless-stopped
-    ports:
-      - 3500:3500
     expose:
       - "3500"
     depends_on:
-      - postgresql
+      postgresql:
+        condition: service_healthy
     networks:
       - app-network
 
@@ -61,6 +60,12 @@ services:
       - "5434:5432"
     volumes:
       - postgresql-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U username -d your_database"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     networks:
       - app-network
     
