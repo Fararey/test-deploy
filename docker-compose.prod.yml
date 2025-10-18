@@ -25,6 +25,8 @@ services:
       - NODE_ENV=production
       # Теперь фронтенд будет обращаться к API через nginx
       - NEXT_PUBLIC_BACKEND_URL=https://justcreatedsite.ru/api
+      # Сохраняем console.log в production для отладки
+      - KEEP_CONSOLE=true
     restart: unless-stopped
     expose:
       - "4000"
