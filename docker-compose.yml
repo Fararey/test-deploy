@@ -28,10 +28,30 @@ services:
       - /usr/src/app/node_modules
     environment:
       - NODE_ENV=development
+    depends_on:
+      - postgresql
     networks:
       - app-network
+
+  postgresql:
+    image: postgres:latest
+    container_name: my-postgresql
+    environment:
+      POSTGRES_USER: username
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: your_database
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgresql-data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    
 
 networks:
   app-network:
     driver: bridge
+
+volumes:
+  postgresql-data:
 
