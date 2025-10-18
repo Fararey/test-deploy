@@ -13,11 +13,8 @@ RUN npm ci
 # Копирование остальных файлов проекта
 COPY . .
 
-# Сборка приложения для production
-RUN npm run build
-
 # Открытие порта 4000
 EXPOSE 4000
 
-# Запуск приложения в production режиме
-CMD [ "npm", "start" ] 
+# Запуск приложения в зависимости от NODE_ENV
+CMD if [ "$NODE_ENV" = "production" ]; then npm run build && npm start; else npm run dev; fi 

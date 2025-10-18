@@ -26,6 +26,7 @@ export default function Home() {
     setMessage(null)
 
     try {
+      console.log('пытаемся отправить запрос на /api/login', { name, password })
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3500/api'}/login`,
         {
@@ -36,10 +37,11 @@ export default function Home() {
           body: JSON.stringify({ name, password }),
         }
       )
-
+      console.log('ответ от сервера', response)
       const data: LoginResponse = await response.json()
 
       if (data.success) {
+        console.log('успешно аутентифицирован', data)
         setMessage({
           type: 'success',
           text: `✅ ${data.message} Добро пожаловать, ${data.user?.name}!`,
@@ -47,12 +49,14 @@ export default function Home() {
         setName('')
         setPassword('')
       } else {
+        console.log('не успешно аутентифицирован', data)
         setMessage({
           type: 'error',
           text: `❌ ${data.message}`,
         })
       }
     } catch (error) {
+      console.log('ошибка при аутентификации', error)
       setMessage({
         type: 'error',
         text: '❌ Ошибка соединения с сервером. Проверьте, что бэкенд запущен.',
