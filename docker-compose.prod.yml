@@ -1,37 +1,37 @@
 services:
-  nginx:
-    build:
-      context: ./nginx
-      dockerfile: Dockerfile
-    ports:
-      - "80:80"
-      - "443:443"
-    depends_on:
-      - frontend
-      - backend
-    restart: unless-stopped
-    volumes:
-      # Для production с реальным доменом раскомментируйте эти строки:
-      - ./ssl:/etc/nginx/ssl:ro
-      - nginx_logs:/var/log/nginx
-    networks:
-      - app-network
+  # nginx:
+  #   build:
+  #     context: ./nginx
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   depends_on:
+  #     - frontend
+  #     - backend
+  #   restart: unless-stopped
+  #   volumes:
+  #     # Для production с реальным доменом раскомментируйте эти строки:
+  #     - ./ssl:/etc/nginx/ssl:ro
+  #     - nginx_logs:/var/log/nginx
+  #   networks:
+  #     - app-network
 
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    environment:
-      - NODE_ENV=production
-      # Теперь фронтенд будет обращаться к API через nginx
-      - NEXT_PUBLIC_BACKEND_URL=https://justcreatedsite.ru/api
-      # Сохраняем console.log в production для отладки
-      - KEEP_CONSOLE=true
-    restart: unless-stopped
-    expose:
-      - "4000"
-    networks:
-      - app-network
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   environment:
+  #     - NODE_ENV=production
+  #     # Теперь фронтенд будет обращаться к API через nginx
+  #     - NEXT_PUBLIC_BACKEND_URL=https://justcreatedsite.ru/api
+  #     # Сохраняем console.log в production для отладки
+  #     - KEEP_CONSOLE=true
+  #   restart: unless-stopped
+  #   expose:
+  #     - "4000"
+  #   networks:
+  #     - app-network
 
   backend:
     build:
@@ -41,6 +41,8 @@ services:
       - NODE_ENV=production
       - PORT=3500
     restart: unless-stopped
+    ports:
+      - 3500:3500
     expose:
       - "3500"
     depends_on:
