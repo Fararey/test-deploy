@@ -1,7 +1,7 @@
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
-import sequelize, { initDatabase } from './config/database.js';
+import { initDatabase } from './config/sequelize.js';
 import Log from './models/Log.js';
 
 dotenv.config();
