@@ -29,6 +29,14 @@ const Log = sequelize.define(
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
     },
+    companyId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'companies',
+        key: 'id',
+      },
+    },
   },
   {
     tableName: 'logs',

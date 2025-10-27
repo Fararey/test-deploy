@@ -1,4 +1,21 @@
 services:
+  metaadmin:
+    build:
+      context: ./metaadmin
+      dockerfile: Dockerfile
+    volumes:
+      - ./metaadmin:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - 3000:3000
+    environment:
+      - NODE_ENV=development
+      - REACT_APP_API_URL=http://localhost:3500/api
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
   frontend:
     build:
       context: ./frontend

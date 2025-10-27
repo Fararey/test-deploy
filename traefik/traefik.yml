@@ -1,0 +1,41 @@
+# Traefik configuration for multi-tenant platform
+
+# Global configuration
+[global]
+  checkNewVersion = false
+  sendAnonymousUsage = false
+
+# API configuration
+[api]
+  dashboard = true
+  insecure = true  # Only for development
+
+# Entry points
+[entryPoints]
+  [entryPoints.web]
+    address = ":80"
+  [entryPoints.websecure]
+    address = ":443"
+
+# Providers
+[providers]
+  [providers.docker]
+    endpoint = "unix:///var/run/docker.sock"
+    exposedByDefault = false
+    network = "app-network"
+
+# Certificate resolvers
+[certificatesResolvers]
+  [certificatesResolvers.letsencrypt]
+    [certificatesResolvers.letsencrypt.acme]
+      email = "admin@justcreatedsite.ru"
+      storage = "/letsencrypt/acme.json"
+      [certificatesResolvers.letsencrypt.acme.httpChallenge]
+        entryPoint = "web"
+
+# Logging
+[log]
+  level = "INFO"
+
+[accessLog]
+  format = "json"

@@ -9,6 +9,25 @@ interface LoginResponse {
     name: string
     role: string
   }
+  company?: {
+    id: number
+    name: string
+    domain: string
+  }
+}
+
+interface Company {
+  id: number
+  name: string
+  domain: string
+  description: string
+  logo: string
+  status: string
+}
+
+interface CompanyResponse {
+  success: boolean
+  company: Company
 }
 
 interface Log {
@@ -31,6 +50,8 @@ export default function Home() {
   const [loading, setLoading] = useState(false)
   const [logs, setLogs] = useState<Log[]>([])
   const [logsLoading, setLogsLoading] = useState(false)
+  const [company, setCompany] = useState<Company | null>(null)
+  const [companyLoading, setCompanyLoading] = useState(false)
   const [message, setMessage] = useState<{
     type: 'success' | 'error'
     text: string
@@ -60,11 +81,12 @@ export default function Home() {
         console.log('успешно аутентифицирован', data)
         setMessage({
           type: 'success',
-          text: `✅ ${data.message} Добро пожаловать, ${data.user?.name}!`,
+          text: `✅ ${data.message} Добро пожаловать, ${data.user?.name}! Компания: ${data.company?.name}`,
         })
         setName('')
         setPassword('')
-        // Обновляем логи после успешного входа
+        // Обновляем данные после успешного входа
+        fetchCompany()
         fetchLogs()
       } else {
         console.log('не успешно аутентифицирован', data)
@@ -72,7 +94,8 @@ export default function Home() {
           type: 'error',
           text: `❌ ${data.message}`,
         })
-        // Обновляем логи после неуспешной попытки
+        // Обновляем данные после неуспешной попытки
+        fetchCompany()
         fetchLogs()
       }
     } catch (error) {
@@ -83,6 +106,24 @@ export default function Home() {
       })
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchCompany = async () => {
+    setCompanyLoading(true)
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3500/api'}/company`
+      )
+      const data: CompanyResponse = await response.json()
+
+      if (data.success) {
+        setCompany(data.company)
+      }
+    } catch (error) {
+      console.error('Ошибка при получении информации о компании:', error)
+    } finally {
+      setCompanyLoading(false)
     }
   }
 
@@ -104,13 +145,66 @@ export default function Home() {
     }
   }
 
-  // Загружаем логи при загрузке компонента
+  // Загружаем данные при загрузке компонента
   useEffect(() => {
+    fetchCompany()
     fetchLogs()
   }, [])
 
   return (
     <div className='container'>
+      {/* Информация о компании */}
+      {companyLoading ? (
+        <div className='loading'>Загрузка информации о компании...</div>
+      ) : company ? (
+        <div
+          style={{
+            background: '#f8f9fa',
+            padding: '20px',
+            borderRadius: '8px',
+            marginBottom: '30px',
+            border: '1px solid #e9ecef',
+          }}
+        >
+          <h2 style={{ margin: '0 0 10px 0', color: '#495057' }}>
+            🏢 {company.name}
+          </h2>
+          <p style={{ margin: '5px 0', color: '#6c757d' }}>
+            <strong>Домен:</strong> {company.domain}
+          </p>
+          {company.description && (
+            <p style={{ margin: '5px 0', color: '#6c757d' }}>
+              <strong>Описание:</strong> {company.description}
+            </p>
+          )}
+          <p style={{ margin: '5px 0', color: '#6c757d' }}>
+            <strong>Статус:</strong>
+            <span
+              style={{
+                color: company.status === 'active' ? '#28a745' : '#dc3545',
+                fontWeight: 'bold',
+                marginLeft: '5px',
+              }}
+            >
+              {company.status === 'active' ? '✅ Активна' : '❌ Неактивна'}
+            </span>
+          </p>
+        </div>
+      ) : (
+        <div
+          style={{
+            background: '#f8d7da',
+            padding: '20px',
+            borderRadius: '8px',
+            marginBottom: '30px',
+            border: '1px solid #f5c6cb',
+            color: '#721c24',
+          }}
+        >
+          ❌ Компания не найдена
+        </div>
+      )}
+
       <h1 className='title'>🔐 Тестовая Аутентификация</h1>
 
       <form onSubmit={handleSubmit} className='form'>
@@ -176,12 +270,15 @@ export default function Home() {
         <div className='logs-header'>
           <h3>📊 История попыток входа</h3>
           <button
-            onClick={fetchLogs}
+            onClick={() => {
+              fetchCompany()
+              fetchLogs()
+            }}
             className='button'
-            disabled={logsLoading}
+            disabled={logsLoading || companyLoading}
             style={{ padding: '8px 16px', fontSize: '14px' }}
           >
-            {logsLoading ? '🔄' : '🔄'} Обновить
+            {logsLoading || companyLoading ? '🔄' : '🔄'} Обновить
           </button>
         </div>
 
