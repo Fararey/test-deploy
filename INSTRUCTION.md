@@ -267,7 +267,7 @@ git clone <your-repo>
 cd test-deploy
 
 # Запустите для разработки
-docker-compose up --build
+docker compose up --build
 
 # Откройте http://localhost:4000
 ```
@@ -275,7 +275,7 @@ docker-compose up --build
 ### **Продакшен деплой:**
 ```bash
 # На сервере
-docker-compose -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.prod.yml up -d --build
 
 # Настройте SSL (если есть домен)
 ./scripts/setup-ssl.sh your-domain.com
