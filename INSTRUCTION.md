@@ -354,7 +354,7 @@ docker compose up --build
 ### **Продакшен деплой:**
 ```bash
 # На сервере
-docker compose -f docker-compose.traefik.yml up -d --build
+docker compose -f docker-compose.traefik.yml up --build
 
 # Настройте DNS записи:
 # meta.justcreatedsite.ru -> ваш IP
