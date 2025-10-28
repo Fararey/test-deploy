@@ -30,9 +30,13 @@ function App() {
 
   const checkAuth = async () => {
     try {
+      console.log('Проверяем авторизацию на:', `${API_BASE_URL}/meta/companies`);
+      
       const response = await fetch(`${API_BASE_URL}/meta/companies`, {
         credentials: 'include'
       });
+      
+      console.log('Ответ проверки авторизации:', response.status, response.statusText);
       
       if (response.ok) {
         setIsLoggedIn(true);
@@ -52,6 +56,9 @@ function App() {
     setMessage(null);
 
     try {
+      console.log('Отправляем запрос на:', `${API_BASE_URL}/meta/login`);
+      console.log('Данные:', { username, password });
+      
       const response = await fetch(`${API_BASE_URL}/meta/login`, {
         method: 'POST',
         headers: {
@@ -61,7 +68,10 @@ function App() {
         body: JSON.stringify({ username, password }),
       });
 
+      console.log('Ответ сервера:', response.status, response.statusText);
+      
       const data = await response.json();
+      console.log('Данные ответа:', data);
 
       if (data.success) {
         setIsLoggedIn(true);
@@ -71,7 +81,8 @@ function App() {
         setMessage({ type: 'error', text: data.message });
       }
     } catch (error) {
-      setMessage({ type: 'error', text: 'Ошибка соединения с сервером' });
+      console.error('Ошибка запроса:', error);
+      setMessage({ type: 'error', text: `Ошибка соединения с сервером: ${error.message}` });
     } finally {
       setLoading(false);
     }
