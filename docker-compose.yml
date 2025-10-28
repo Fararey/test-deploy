@@ -51,7 +51,7 @@ services:
       - app-network
 
   postgresql:
-    image: postgres:latest
+    image: postgres:17
     container_name: my-postgresql
     environment:
       POSTGRES_USER: username
