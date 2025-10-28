@@ -64,7 +64,7 @@ scp -r ./test-deploy user@your-server:/opt/ && cd /opt/test-deploy
 docker compose -f docker-compose.traefik.yml up -d --build
 
 # Настройте DNS записи:
-# justsomemetaadmin.ru -> ваш IP
+# meta.justcreatedsite.ru -> ваш IP
 # justcreatedsite.ru -> ваш IP
 # api.justcreatedsite.ru -> ваш IP
 ```
@@ -134,7 +134,7 @@ test-deploy/
 - **Frontend**: http://localhost:4000
 
 ### Production:
-- **MetaAdmin**: https://justsomemetaadmin.ru
+- **MetaAdmin**: https://meta.justcreatedsite.ru
 - **Frontend**: https://justcreatedsite.ru
 - **API**: https://api.justcreatedsite.ru
 

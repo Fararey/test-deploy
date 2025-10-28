@@ -26,7 +26,7 @@ const PORT = process.env.PORT || 3500;
 
 // Middleware
 const corsOptions = {
-  origin(origin, callback) {
+  async origin(origin, callback) {
     // В development разрешаем localhost
     if (process.env.NODE_ENV !== 'production') {
       if (
@@ -41,9 +41,34 @@ const corsOptions = {
 
     // В production проверяем домены из базы данных
     if (process.env.NODE_ENV === 'production') {
-      // Разрешаем все домены для продакшена (или можно добавить проверку по БД)
-      callback(null, true);
-      return;
+      if (!origin) {
+        // Запросы без Origin (например, Postman, curl)
+        callback(null, true);
+        return;
+      }
+
+      // Разрешаем системные домены
+      const systemDomains = [
+        'api.justcreatedsite.ru',
+        'meta.justcreatedsite.ru',
+        'traefik.justcreatedsite.ru',
+      ];
+
+      const domain = origin.replace(/^https?:\/\//, '');
+      if (systemDomains.includes(domain)) {
+        callback(null, true);
+        return;
+      }
+
+      // Проверяем клиентские домены в базе данных
+      const company = await Company.findOne({
+        where: { domain },
+      });
+
+      if (company) {
+        callback(null, true);
+        return;
+      }
     }
 
     callback(new Error('Not allowed by CORS'));

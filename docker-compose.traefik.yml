@@ -32,7 +32,7 @@ services:
       - app-network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.metaadmin.rule=Host(`justsomemetaadmin.ru`)"
+      - "traefik.http.routers.metaadmin.rule=Host(`meta.justcreatedsite.ru`)"
       - "traefik.http.routers.metaadmin.entrypoints=websecure"
       - "traefik.http.routers.metaadmin.tls.certresolver=letsencrypt"
       - "traefik.http.services.metaadmin.loadbalancer.server.port=3000"

@@ -171,8 +171,8 @@ docker compose -f docker-compose.traefik.yml up -d --build
 5. Динамическая маршрутизация по доменам
 
 **Доступ:**
-- MetaAdmin: https://justsomemetaadmin.ru
-- Frontend: https://justcreatedsite.ru
+- MetaAdmin: https://meta.justcreatedsite.ru
+- Frontend: https://justcreatedsite.ru (тестовая компания)
 - Backend API: https://api.justcreatedsite.ru
 - Traefik Dashboard: https://traefik.justcreatedsite.ru
 - Автоматический HTTPS
@@ -357,7 +357,7 @@ docker compose up --build
 docker compose -f docker-compose.traefik.yml up -d --build
 
 # Настройте DNS записи:
-# justsomemetaadmin.ru -> ваш IP
+# meta.justcreatedsite.ru -> ваш IP
 # justcreatedsite.ru -> ваш IP
 # api.justcreatedsite.ru -> ваш IP
 ```
