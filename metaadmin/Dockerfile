@@ -17,4 +17,5 @@ COPY . .
 EXPOSE 3000
 
 # Запуск приложения в зависимости от NODE_ENV
-CMD if [ "$NODE_ENV" = "production" ]; then npm run build && npm install -g serve && serve -s build -l 3000 -H 0.0.0.0; else npm start; fi
+# Запуск приложения в зависимости от NODE_ENV
+CMD if [ "$NODE_ENV" = "production" ]; then npm run build && npm start; else npm run dev; fi 
