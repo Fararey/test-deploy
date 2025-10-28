@@ -27,6 +27,7 @@ services:
       dockerfile: Dockerfile
     environment:
       - NODE_ENV=production
+      - HOST=0.0.0.0
       - REACT_APP_API_URL=http://localhost:3500/api
     restart: unless-stopped
     networks:
