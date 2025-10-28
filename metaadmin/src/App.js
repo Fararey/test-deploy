@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import './index.css';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3500/api';
+const API_BASE_URL = process.env.NODE_ENV === 'production' 
+  ? '/api' 
+  : (process.env.REACT_APP_API_URL || 'http://localhost:3500/api');
 
 // Отладочная информация
 console.log('REACT_APP_API_URL:', process.env.REACT_APP_API_URL);

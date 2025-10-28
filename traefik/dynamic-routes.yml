@@ -1,0 +1,20 @@
+# Динамические маршруты для клиентских доменов
+# Этот файл будет обновляться автоматически при создании/удалении компаний
+
+http:
+  routers:
+    # Маршрут для justcreatedsite.ru (базовый домен)
+    frontend-justcreatedsite:
+      rule: "Host(`justcreatedsite.ru`) || Host(`www.justcreatedsite.ru`)"
+      service: "frontend-service"
+      tls:
+        certResolver: "letsencrypt"
+      entryPoints:
+        - "websecure"
+
+  services:
+    # Сервис фронтенда
+    frontend-service:
+      loadBalancer:
+        servers:
+          - url: "http://frontend:4000"

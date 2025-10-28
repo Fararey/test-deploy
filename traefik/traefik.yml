@@ -23,6 +23,9 @@ providers:
     endpoint: "unix:///var/run/docker.sock"
     exposedByDefault: false
     network: "app-network"
+  file:
+    filename: "/dynamic-routes.yml"
+    watch: true
 
 # Certificate resolvers
 certificatesResolvers:

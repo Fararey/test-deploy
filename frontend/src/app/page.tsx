@@ -57,6 +57,48 @@ export default function Home() {
     text: string
   } | null>(null)
 
+  // Функция для получения API URL на основе текущего домена
+  const getApiUrl = () => {
+    if (typeof window === 'undefined')
+      return process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3500/api'
+
+    // В development режиме используем статический URL
+    if (process.env.NODE_ENV !== 'production') {
+      return process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3500/api'
+    }
+
+    // В production используем относительный путь /api
+    return '/api'
+  }
+
+  // Функция для получения заголовков с доменом компании
+  const getHeaders = (): Record<string, string> => {
+    if (typeof window === 'undefined')
+      return { 'Content-Type': 'application/json' }
+
+    // В development режиме не добавляем заголовок с доменом
+    if (process.env.NODE_ENV !== 'production') {
+      return { 'Content-Type': 'application/json' }
+    }
+
+    const hostname = window.location.hostname
+
+    // Для системных доменов не добавляем заголовок
+    if (
+      hostname === 'api.justcreatedsite.ru' ||
+      hostname === 'meta.justcreatedsite.ru' ||
+      hostname === 'traefik.justcreatedsite.ru'
+    ) {
+      return { 'Content-Type': 'application/json' }
+    }
+
+    // Для клиентских доменов добавляем заголовок с доменом
+    return {
+      'Content-Type': 'application/json',
+      'X-Company-Domain': hostname,
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -64,17 +106,11 @@ export default function Home() {
 
     try {
       console.log('пытаемся отправить запрос на /api/login', { name, password })
-      //  FIXME: переменная NEXT_PUBLIC_BACKEND_URL опасна для срм системы
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3500/api'}/login`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ name, password }),
-        }
-      )
+      const response = await fetch(`${getApiUrl()}/login`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ name, password }),
+      })
       console.log('ответ от сервера', response)
       const data: LoginResponse = await response.json()
 
@@ -113,9 +149,9 @@ export default function Home() {
   const fetchCompany = async () => {
     setCompanyLoading(true)
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3500/api'}/company`
-      )
+      const response = await fetch(`${getApiUrl()}/company`, {
+        headers: getHeaders(),
+      })
       const data: CompanyResponse = await response.json()
 
       if (data.success) {
@@ -131,9 +167,9 @@ export default function Home() {
   const fetchLogs = async () => {
     setLogsLoading(true)
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3500/api'}/logs`
-      )
+      const response = await fetch(`${getApiUrl()}/logs`, {
+        headers: getHeaders(),
+      })
       const data: LogsResponse = await response.json()
 
       if (data.success) {

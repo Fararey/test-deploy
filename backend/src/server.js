@@ -2,6 +2,9 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
 import cookieParser from 'cookie-parser';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { initDatabase } from './config/sequelize.js';
 import { fillInitDb } from './config/fillInitDb.js';
 import { Company, Log } from './models/index.js';
@@ -12,12 +15,157 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3500;
 
+// Получаем путь к директории проекта
+const filename = fileURLToPath(import.meta.url);
+const dirname = path.dirname(filename);
+const projectRoot = path.resolve(dirname, '../../..');
+
+// Функция для обновления маршрутов Traefik
+const updateTraefikRoutes = async () => {
+  try {
+    // В development режиме не обновляем маршруты Traefik
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('🔧 Development режим: маршруты Traefik не обновляются');
+      return;
+    }
+
+    // Получаем все активные компании из базы данных
+    const companies = await Company.findAll({
+      where: { status: 'active' },
+      order: [['createdAt', 'ASC']],
+    });
+
+    // Генерируем конфигурацию маршрутов
+    const routes = {};
+    const services = {
+      'frontend-service': {
+        loadBalancer: {
+          servers: [{ url: 'http://frontend:4000' }],
+        },
+      },
+      'backend-service': {
+        loadBalancer: {
+          servers: [{ url: 'http://backend:3500' }],
+        },
+      },
+    };
+
+    companies.forEach((company) => {
+      const { domain } = company;
+      const wwwDomain = `www.${domain}`;
+
+      // Маршрут для фронтенда (все пути кроме /api)
+      const frontendRouterName = `frontend-${domain.replace(/\./g, '-')}`;
+      routes[frontendRouterName] = {
+        rule: `(Host(\`${domain}\`) || Host(\`${wwwDomain}\`)) && !PathPrefix(\`/api\`)`,
+        service: 'frontend-service',
+        tls: {
+          certResolver: 'letsencrypt',
+        },
+        entryPoints: ['websecure'],
+      };
+
+      // Маршрут для API (только /api пути)
+      const apiRouterName = `api-${domain.replace(/\./g, '-')}`;
+      routes[apiRouterName] = {
+        rule: `(Host(\`${domain}\`) || Host(\`${wwwDomain}\`)) && PathPrefix(\`/api\`)`,
+        service: 'backend-service',
+        tls: {
+          certResolver: 'letsencrypt',
+        },
+        entryPoints: ['websecure'],
+      };
+    });
+
+    // Добавляем маршруты для системных доменов
+    const systemDomains = [
+      { domain: 'meta.justcreatedsite.ru', service: 'metaadmin-service' },
+      { domain: 'traefik.justcreatedsite.ru', service: 'traefik-service' },
+    ];
+
+    systemDomains.forEach(({ domain, service }) => {
+      const routerName = `system-${domain.replace(/\./g, '-')}`;
+      routes[routerName] = {
+        rule: `Host(\`${domain}\`)`,
+        service,
+        tls: {
+          certResolver: 'letsencrypt',
+        },
+        entryPoints: ['websecure'],
+      };
+    });
+
+    // Добавляем сервисы для системных доменов
+    services['metaadmin-service'] = {
+      loadBalancer: {
+        servers: [{ url: 'http://metaadmin:3000' }],
+      },
+    };
+    services['traefik-service'] = {
+      loadBalancer: {
+        servers: [{ url: 'http://traefik:8080' }],
+      },
+    };
+
+    // Записываем в файл (внутри контейнера путь будет /app/traefik)
+    const configPath =
+      process.env.NODE_ENV === 'production'
+        ? '/app/traefik/dynamic-routes.yml'
+        : path.join(projectRoot, 'traefik', 'dynamic-routes.yml');
+    const yamlContent = `# Динамические маршруты для клиентских доменов
+# Этот файл обновляется автоматически при изменении компаний
+# Последнее обновление: ${new Date().toISOString()}
+
+http:
+  routers:
+${Object.entries(routes)
+  .map(
+    ([name, routeConfig]) => `    ${name}:
+      rule: "${routeConfig.rule}"
+      service: "${routeConfig.service}"
+      tls:
+        certResolver: "${routeConfig.tls.certResolver}"
+      entryPoints:
+        - "${routeConfig.entryPoints[0]}"`,
+  )
+  .join('\n')}
+
+  services:
+    frontend-service:
+      loadBalancer:
+        servers:
+          - url: "http://frontend:4000"
+    backend-service:
+      loadBalancer:
+        servers:
+          - url: "http://backend:3500"
+    metaadmin-service:
+      loadBalancer:
+        servers:
+          - url: "http://metaadmin:3000"
+    traefik-service:
+      loadBalancer:
+        servers:
+          - url: "http://traefik:8080"
+`;
+
+    fs.writeFileSync(configPath, yamlContent);
+    console.log('✅ Маршруты Traefik обновлены');
+    console.log(
+      `📋 Активные домены: ${companies.map((c) => c.domain).join(', ')}`,
+    );
+  } catch (error) {
+    console.error('❌ Ошибка при обновлении маршрутов Traefik:', error);
+  }
+};
+
 // создаем связи
 (async () => {
   try {
     applyAssociations(); // Синхронная функция
     await initDatabase(); // Ensure all tables are created
     await fillInitDb(); // Populate initial data
+    await updateTraefikRoutes(); // Update Traefik routes
   } catch (error) {
     console.error('Error during startup:', error);
     console.log('Server will continue without full initialization...');
@@ -65,7 +213,7 @@ const corsOptions = {
         where: { domain },
       });
 
-      if (company) {
+      if (company && company.status === 'active') {
         callback(null, true);
         return;
       }
@@ -82,24 +230,40 @@ app.use(cookieParser());
 
 // Middleware для определения компании по домену
 app.use(async (req, res, next) => {
-  const { origin } = req.headers;
-
   // Пропускаем middleware для метаадминки API
-  // Решение супер временное тк опасное
   if (req.path.startsWith('/api/meta/')) {
     return next();
   }
-  if (!origin) {
-    return res.status(400).json({ message: 'origin header is missing' });
+
+  // В development режиме используем старую логику
+  if (process.env.NODE_ENV !== 'production') {
+    const { origin } = req.headers;
+
+    if (!origin) {
+      return res.status(400).json({ message: 'origin header is missing' });
+    }
+
+    // В development режиме используем localhost
+    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      req.company = await Company.findOne({ where: { domain: 'localhost' } });
+    } else {
+      const domain = origin.replace(/^https?:\/\//, '');
+      req.company = await Company.findOne({ where: { domain } });
+    }
+
+    return next();
   }
 
-  // В development режиме используем localhost
-  if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
-    req.company = await Company.findOne({ where: { domain: 'localhost' } });
-  } else {
-    const domain = origin.replace(/^https?:\/\//, '');
-    req.company = await Company.findOne({ where: { domain } });
+  // В production режиме используем новую логику
+  const companyDomain = req.headers['x-company-domain'] || req.headers.host;
+
+  if (!companyDomain) {
+    return res.status(400).json({ message: 'Company domain is missing' });
   }
+
+  // В production используем Host заголовок
+  const domain = companyDomain.replace(/^https?:\/\//, '').split(':')[0]; // Убираем порт если есть
+  req.company = await Company.findOne({ where: { domain } });
 
   next();
 });
@@ -359,6 +523,9 @@ app.post('/api/meta/companies', checkMetaAuth, async (req, res) => {
       status: 'active',
     });
 
+    // Обновляем маршруты Traefik
+    await updateTraefikRoutes();
+
     return res.status(201).json({
       success: true,
       message: 'Компания создана успешно',
@@ -404,6 +571,9 @@ app.put('/api/meta/companies/:id', checkMetaAuth, async (req, res) => {
       status: status || company.status,
     });
 
+    // Обновляем маршруты Traefik
+    await updateTraefikRoutes();
+
     return res.status(200).json({
       success: true,
       message: 'Компания обновлена успешно',
@@ -440,6 +610,9 @@ app.delete('/api/meta/companies/:id', checkMetaAuth, async (req, res) => {
     }
 
     await company.destroy();
+
+    // Обновляем маршруты Traefik
+    await updateTraefikRoutes();
 
     return res.status(200).json({
       success: true,
