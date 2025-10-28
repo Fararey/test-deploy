@@ -91,8 +91,8 @@ app.use(async (req, res, next) => {
   if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
     req.company = await Company.findOne({ where: { domain: 'localhost' } });
   } else {
-    console.log(1, origin);
-    req.company = await Company.findOne({ where: { domain: origin } });
+    const domain = origin.replace(/^https?:\/\//, '');
+    req.company = await Company.findOne({ where: { domain } });
   }
 
   next();
