@@ -82,7 +82,10 @@ app.use(cookieParser());
 
 // Middleware для определения компании по домену
 app.use(async (req, res, next) => {
-  const host = req.get('host') || req.hostname;
+  const { host } = req.headers;
+  if (!host) {
+    return res.status(400).json({ message: 'Host header is missing' });
+  }
 
   // В development режиме используем localhost
   if (host.includes('localhost') || host.includes('127.0.0.1')) {
