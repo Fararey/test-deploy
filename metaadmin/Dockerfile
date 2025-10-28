@@ -8,6 +8,13 @@ RUN npm install
 
 COPY . .
 
+# Build для production
+RUN npm run build
+
+# Устанавливаем serve для статических файлов
+RUN npm install -g serve
+
 EXPOSE 3000
 
-CMD ["npm", "start"]
+# Запускаем production build
+CMD ["serve", "-s", "build", "-l", "3000"]
