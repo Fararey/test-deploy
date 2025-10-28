@@ -26,7 +26,7 @@ services:
       dockerfile: Dockerfile
     environment:
       - NODE_ENV=production
-      - REACT_APP_API_URL=https://api.justcreatedsite.ru
+      - REACT_APP_API_URL=https://api.justcreatedsite.ru/api
     restart: unless-stopped
     networks:
       - app-network
@@ -43,7 +43,7 @@ services:
       dockerfile: Dockerfile
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_BACKEND_URL=https://api.justcreatedsite.ru
+      - NEXT_PUBLIC_BACKEND_URL=https://api.justcreatedsite.ru/api
     restart: unless-stopped
     networks:
       - app-network
