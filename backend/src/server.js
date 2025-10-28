@@ -82,6 +82,8 @@ app.use(cookieParser());
 
 // Middleware для определения компании по домену
 app.use(async (req, res, next) => {
+  console.log(1, req.headers);
+  console.log(2, req.hostname);
   const { host } = req.headers;
   if (!host) {
     return res.status(400).json({ message: 'Host header is missing' });
