@@ -82,18 +82,16 @@ app.use(cookieParser());
 
 // Middleware для определения компании по домену
 app.use(async (req, res, next) => {
-  console.log(1, req.headers);
-  console.log(2, req.hostname);
-  const { host } = req.headers;
-  if (!host) {
-    return res.status(400).json({ message: 'Host header is missing' });
+  const { origin } = req.headers;
+  if (!origin) {
+    return res.status(400).json({ message: 'origin header is missing' });
   }
 
   // В development режиме используем localhost
-  if (host.includes('localhost') || host.includes('127.0.0.1')) {
+  if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
     req.company = await Company.findOne({ where: { domain: 'localhost' } });
   } else {
-    req.company = await Company.findOne({ where: { domain: host } });
+    req.company = await Company.findOne({ where: { domain: origin } });
   }
 
   next();
