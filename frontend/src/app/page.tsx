@@ -64,6 +64,7 @@ export default function Home() {
 
     try {
       console.log('пытаемся отправить запрос на /api/login', { name, password })
+      //  FIXME: переменная NEXT_PUBLIC_BACKEND_URL опасна для срм системы
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3500/api'}/login`,
         {

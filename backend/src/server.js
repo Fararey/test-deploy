@@ -83,6 +83,12 @@ app.use(cookieParser());
 // Middleware для определения компании по домену
 app.use(async (req, res, next) => {
   const { origin } = req.headers;
+
+  // Пропускаем middleware для метаадминки API
+  // Решение супер временное тк опасное
+  if (req.path.startsWith('/api/meta/')) {
+    return next();
+  }
   if (!origin) {
     return res.status(400).json({ message: 'origin header is missing' });
   }

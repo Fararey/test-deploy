@@ -1,20 +1,20 @@
+# Базовый образ
 FROM node:18-alpine
 
+# Рабочая директория в контейнере
 WORKDIR /usr/src/app
 
+# Копирование файла package.json и package-lock.json (если есть)
 COPY package*.json ./
 
-RUN npm install
+# Установка всех зависимостей
+RUN npm ci
 
+# Копирование остальных файлов проекта
 COPY . .
 
-# Build для production
-RUN npm run build
-
-# Устанавливаем serve для статических файлов
-RUN npm install -g serve
-
+# Открытие порта 3000
 EXPOSE 3000
 
-# Запускаем production build
-CMD ["serve", "-s", "build", "-l", "3000"]
+# Запуск приложения в зависимости от NODE_ENV
+CMD if [ "$NODE_ENV" = "production" ]; then npm run build && npm install -g serve && serve -s build -l 3000; else npm start; fi
