@@ -14,6 +14,12 @@ services:
       - ./traefik/dynamic-routes.yml:/dynamic-routes.yml:ro
     networks:
       - app-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.justcreatedsite.ru`)"
+      - "traefik.http.routers.traefik.entrypoints=websecure"
+      - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
+      - "traefik.http.services.traefik.loadbalancer.server.port=8080"
 
   metaadmin:
     build:
@@ -25,6 +31,12 @@ services:
     restart: unless-stopped
     networks:
       - app-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.metaadmin.rule=Host(`meta.justcreatedsite.ru`) && !PathPrefix(`/api`)"
+      - "traefik.http.routers.metaadmin.entrypoints=websecure"
+      - "traefik.http.routers.metaadmin.tls.certresolver=letsencrypt"
+      - "traefik.http.services.metaadmin.loadbalancer.server.port=3000"
 
   frontend:
     build:
@@ -58,6 +70,12 @@ services:
       - ./traefik:/app/traefik
     networks:
       - app-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend-metaadmin.rule=Host(`meta.justcreatedsite.ru`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.backend-metaadmin.entrypoints=websecure"
+      - "traefik.http.routers.backend-metaadmin.tls.certresolver=letsencrypt"
+      - "traefik.http.services.backend-metaadmin.loadbalancer.server.port=3500"
 
   postgresql:
     image: postgres:17

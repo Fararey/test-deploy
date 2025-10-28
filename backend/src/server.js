@@ -77,36 +77,6 @@ const updateTraefikRoutes = async () => {
       };
     });
 
-    // Добавляем маршруты для системных доменов
-    const systemDomains = [
-      { domain: 'meta.justcreatedsite.ru', service: 'metaadmin-service' },
-      { domain: 'traefik.justcreatedsite.ru', service: 'traefik-service' },
-    ];
-
-    systemDomains.forEach(({ domain, service }) => {
-      const routerName = `system-${domain.replace(/\./g, '-')}`;
-      routes[routerName] = {
-        rule: `Host(\`${domain}\`)`,
-        service,
-        tls: {
-          certResolver: 'letsencrypt',
-        },
-        entryPoints: ['websecure'],
-      };
-    });
-
-    // Добавляем сервисы для системных доменов
-    services['metaadmin-service'] = {
-      loadBalancer: {
-        servers: [{ url: 'http://metaadmin:3000' }],
-      },
-    };
-    services['traefik-service'] = {
-      loadBalancer: {
-        servers: [{ url: 'http://traefik:8080' }],
-      },
-    };
-
     // Записываем в файл (внутри контейнера путь будет /app/traefik)
     const configPath =
       process.env.NODE_ENV === 'production'
@@ -139,14 +109,6 @@ ${Object.entries(routes)
       loadBalancer:
         servers:
           - url: "http://backend:3500"
-    metaadmin-service:
-      loadBalancer:
-        servers:
-          - url: "http://metaadmin:3000"
-    traefik-service:
-      loadBalancer:
-        servers:
-          - url: "http://traefik:8080"
 `;
 
     fs.writeFileSync(configPath, yamlContent);
