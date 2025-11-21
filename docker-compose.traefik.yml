@@ -24,7 +24,7 @@ services:
   metaadmin:
     build:
       context: ./metaadmin
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.production
     environment:
       - NODE_ENV=production
       - HOST=0.0.0.0
@@ -42,7 +42,7 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.production
     environment:
       - NODE_ENV=production
       - NEXT_PUBLIC_BACKEND_URL=https://api.justcreatedsite.ru/api
@@ -59,7 +59,7 @@ services:
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.production
     environment:
       - NODE_ENV=production
       - PORT=3500

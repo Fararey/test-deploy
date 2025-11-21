@@ -1,0 +1,52 @@
+# Stage 1: Dependencies
+FROM node:18-alpine AS deps
+WORKDIR /app
+
+# Копируем файлы зависимостей
+COPY package.json package-lock.json* ./
+
+# Устанавливаем зависимости (включая devDependencies для сборки)
+RUN npm ci
+
+# Stage 2: Builder
+FROM node:18-alpine AS builder
+WORKDIR /app
+
+# Копируем зависимости из deps stage
+COPY --from=deps /app/node_modules ./node_modules
+
+# Копируем исходный код
+COPY . .
+
+# Устанавливаем переменные окружения для сборки
+ENV NODE_ENV=production
+ENV GENERATE_SOURCEMAP=false
+
+# Собираем приложение
+RUN npm run build
+
+# Stage 3: Runner (production)
+FROM node:18-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+# Устанавливаем serve для статики
+RUN npm install -g serve@14.2.1
+
+# Создаем непривилегированного пользователя
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 reactjs
+
+# Копируем собранное приложение
+COPY --from=builder --chown=reactjs:nodejs /app/build ./build
+
+# Переключаемся на непривилегированного пользователя
+USER reactjs
+
+# Открываем порт
+EXPOSE 3000
+
+# Запускаем статический сервер
+CMD ["serve", "-s", "build", "-l", "3000"]
+

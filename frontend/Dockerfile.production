@@ -1,0 +1,56 @@
+# Stage 1: Dependencies
+FROM node:18-alpine AS deps
+WORKDIR /app
+
+# Копируем файлы зависимостей
+COPY package.json package-lock.json* ./
+
+# Устанавливаем зависимости (включая devDependencies для сборки)
+RUN npm ci
+
+# Stage 2: Builder
+FROM node:18-alpine AS builder
+WORKDIR /app
+
+# Копируем зависимости из deps stage
+COPY --from=deps /app/node_modules ./node_modules
+
+# Копируем исходный код
+COPY . .
+
+# Устанавливаем переменные окружения для сборки
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
+
+# Собираем приложение
+RUN npm run build
+
+# Stage 3: Runner (production)
+FROM node:18-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Создаем непривилегированного пользователя
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
+
+# Копируем только необходимые файлы из builder
+# В standalone mode Next.js создает структуру: .next/standalone/ с server.js и зависимостями
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+
+# Переключаемся на непривилегированного пользователя
+USER nextjs
+
+# Открываем порт
+EXPOSE 4000
+
+ENV PORT=4000
+ENV HOSTNAME="0.0.0.0"
+
+# Запускаем приложение
+CMD ["node", "server.js"]
+

@@ -1,0 +1,35 @@
+# Stage 1: Dependencies
+FROM node:18-alpine AS deps
+WORKDIR /app
+
+# Копируем файлы зависимостей
+COPY package.json package-lock.json* ./
+
+# Устанавливаем только production зависимости
+RUN npm ci --only=production && npm cache clean --force
+
+# Stage 2: Runner (production)
+FROM node:18-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+# Создаем непривилегированного пользователя
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nodejs
+
+# Копируем зависимости из deps stage
+COPY --from=deps --chown=nodejs:nodejs /app/node_modules ./node_modules
+
+# Копируем исходный код
+COPY --chown=nodejs:nodejs . .
+
+# Переключаемся на непривилегированного пользователя
+USER nodejs
+
+# Открываем порт
+EXPOSE 3500
+
+# Запускаем приложение
+CMD ["npm", "start"]
+
