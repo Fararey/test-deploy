@@ -14,22 +14,15 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Создаем непривилегированного пользователя
-RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nodejs
-
 # Копируем зависимости из deps stage
-COPY --from=deps --chown=nodejs:nodejs /app/node_modules ./node_modules
+COPY --from=deps /app/node_modules ./node_modules
 
 # Копируем исходный код
-COPY --chown=nodejs:nodejs . .
-
-# Переключаемся на непривилегированного пользователя
-USER nodejs
+COPY . .
 
 # Открываем порт
 EXPOSE 3500
 
-# Запускаем приложение
+# Запускаем приложение (от root, как было раньше - для доступа к volume)
 CMD ["npm", "start"]
 

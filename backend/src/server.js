@@ -37,21 +37,15 @@ const updateTraefikRoutes = async () => {
 
     // Генерируем конфигурацию маршрутов
     const routes = {};
-    const services = {
-      'frontend-service': {
-        loadBalancer: {
-          servers: [{ url: 'http://frontend:4000' }],
-        },
-      },
-      'backend-service': {
-        loadBalancer: {
-          servers: [{ url: 'http://backend:3500' }],
-        },
-      },
-    };
 
     companies.forEach((company) => {
       const { domain } = company;
+
+      // Пропускаем localhost - он только для development, Let's Encrypt не выдает для него сертификаты
+      if (domain === 'localhost' || !domain.includes('.')) {
+        return;
+      }
+
       const wwwDomain = `www.${domain}`;
 
       // Маршрут для фронтенда (все пути кроме /api)
